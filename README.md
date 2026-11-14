@@ -21,7 +21,7 @@ A lightweight PHP 8 and MySQL blog CMS for `http://localhost/swdmm/07-php-blog/`
    The script prompts for a password and confirmation; use at least 12 characters. It refuses to create another admin once an account exists. Admins can sign in using either username or email.
 4. Visit `http://localhost/swdmm/07-php-blog/` and sign in at `/admin/login.php`.
 
-The app's base URL is defined in `app/bootstrap.php`. Update `BASE_URL` there if you install the project at a different path. Ensure the `uploads/` directory is writable by Apache; uploaded cover images are limited to 5 MB and validated by image MIME type.
+The app's base URL is defined in `app/bootstrap.php`. Update `BASE_URL` there if you install the project at a different path. Ensure the `uploads/` directory is writable by Apache; uploaded cover images are limited to 2 MB and accepted only when `finfo` identifies a valid JPEG, PNG, or WebP image.
 
 ## Features
 

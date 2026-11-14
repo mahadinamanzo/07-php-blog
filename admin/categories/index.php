@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $categories = db()->query(
     'SELECT c.id, c.name, c.slug, c.description, COUNT(p.id) AS post_count
      FROM categories c LEFT JOIN posts p ON p.category_id = c.id
-     GROUP BY c.id ORDER BY c.name'
+     GROUP BY c.id, c.name, c.slug, c.description ORDER BY c.name'
 )->fetchAll();
 $adminTitle = 'Categories';
 require dirname(__DIR__) . '/includes/header.php';

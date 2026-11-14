@@ -22,9 +22,9 @@ function posted(string $key, string $default = ''): string
     return isset($_POST[$key]) && is_string($_POST[$key]) ? trim($_POST[$key]) : $default;
 }
 
-function slugify(string $text): string
+function slugify(string $title): string
 {
-    $text = mb_strtolower(trim($text), 'UTF-8');
+    $text = mb_strtolower(trim($title), 'UTF-8');
     $text = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $text) ?: $text;
     $text = preg_replace('/[^a-z0-9]+/', '-', strtolower($text)) ?? '';
     return trim($text, '-') ?: 'post';
@@ -82,20 +82,31 @@ function upload_cover(array $file): ?string
     if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
         throw new RuntimeException('The image upload failed. Please try again.');
     }
-    if (($file['size'] ?? 0) > 5 * 1024 * 1024) {
-        throw new RuntimeException('Cover images must be 5 MB or smaller.');
-    }
-    if (!is_uploaded_file($file['tmp_name'] ?? '')) {
+    $temporaryPath = $file['tmp_name'] ?? '';
+    if (!is_string($temporaryPath) || !is_uploaded_file($temporaryPath)) {
         throw new RuntimeException('Invalid image upload.');
     }
+    $actualSize = filesize($temporaryPath);
+    if (!is_int($actualSize) || $actualSize > 2 * 1024 * 1024) {
+        throw new RuntimeException('Cover images must be 2 MB or smaller.');
+    }
 
-    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
-    $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
-    if (!isset($extensions[$mime]) || @getimagesize($file['tmp_name']) === false) {
-        throw new RuntimeException('Choose a valid JPG, PNG, GIF, or WebP image.');
+    $mime = (new finfo(FILEINFO_MIME_TYPE))->file($temporaryPath);
+    $extensions = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+    $imageInfo = @getimagesize($temporaryPath);
+    if (
+        !is_string($mime)
+        || !isset($extensions[$mime])
+        || $imageInfo === false
+        || ($imageInfo['mime'] ?? null) !== $mime
+    ) {
+        throw new RuntimeException('Choose a valid JPG, PNG, or WebP image.');
     }
 
     $directory = APP_ROOT . DIRECTORY_SEPARATOR . 'uploads';
+    if (is_link($directory)) {
+        throw new RuntimeException('The uploads directory must not be a symbolic link.');
+    }
     if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
         throw new RuntimeException('The uploads directory could not be created.');
     }
@@ -104,4 +115,19 @@ function upload_cover(array $file): ?string
         throw new RuntimeException('The uploaded image could not be saved.');
     }
     return $filename;
+}
+
+function delete_cover_image(?string $filename): void
+{
+    if ($filename === null || $filename === '') {
+        return;
+    }
+    if (preg_match('/\A[a-f0-9]{32}\.(?:jpg|png|webp|gif)\z/i', $filename) !== 1) {
+        throw new RuntimeException('The stored cover image filename is invalid; it was not deleted.');
+    }
+
+    $path = APP_ROOT . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . $filename;
+    if (is_file($path) && !unlink($path)) {
+        throw new RuntimeException('The cover image could not be deleted from uploads.');
+    }
 }

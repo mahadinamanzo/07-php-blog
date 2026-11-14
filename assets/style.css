@@ -117,6 +117,9 @@ td.table-title { max-width: 300px; overflow: hidden; color: var(--ink); font-wei
 .stack-form input[type=file] { color: #647580; font-size: 13px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; }
 .form-actions { display: flex; justify-content: flex-end; gap: 9px; padding-top: 5px; }
+.filter-form { display: flex; align-items: center; gap: 10px; margin: -4px 0 18px; color: #536371; font-size: 13px; font-weight: 600; }
+.filter-form select { min-width: 150px; padding: 8px 10px; border: 1px solid #dce4e8; border-radius: 6px; background: white; color: var(--ink); }
+.filter-form .button { min-height: 36px; padding: 6px 12px; }
 .button-light { border: 1px solid var(--line); background: white; color: #425461; }
 .button-light:hover { color: var(--ink); background: #f5f8f9; }
 .current-image { margin: -9px 0 0; color: var(--muted); font-size: 12px; }
