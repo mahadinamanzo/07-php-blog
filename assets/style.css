@@ -55,11 +55,18 @@ button, input, textarea, select { font: inherit; }
 .page-intro { margin: 15px 0 35px; }
 .page-intro h1 { font-size: 42px; }
 .page-intro > p:not(.eyebrow) { color: #657581; }
-.article { max-width: 800px; margin: 24px auto; }
+.article { max-width: 860px; margin: 24px auto 58px; }
 .article h1 { margin-top: 9px; font-size: clamp(36px, 6vw, 54px); }
-.article .post-meta { margin: 14px 0 28px; }
+.article-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 28px; color: var(--muted); font-size: 13px; }
 .article-cover { display: block; width: 100%; max-height: 480px; margin: 0 0 34px; border-radius: 13px; object-fit: cover; }
-.article-body { color: #344653; font-size: 18px; line-height: 1.9; overflow-wrap: anywhere; }
+.article-body { max-width: 720px; margin: 0 auto; color: #344653; font-size: 18px; line-height: 1.9; overflow-wrap: anywhere; }
+.article-body p { margin: 0 0 1.35em; }
+.related-section { padding-top: 30px; border-top: 1px solid var(--line); }
+.pagination { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 34px; }
+.pagination-pages { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+.pagination-page, .pagination-current, .pagination-link { display: inline-flex; min-width: 38px; min-height: 38px; align-items: center; justify-content: center; padding: 6px 11px; border: 1px solid var(--line); border-radius: 7px; background: white; color: #536371; font-size: 13px; font-weight: 700; }
+.pagination-current { border-color: var(--teal); background: var(--teal); color: white; }
+.pagination-link { padding-inline: 13px; }
 .results-label { margin-bottom: 22px; color: var(--muted); }
 .empty-state { padding: 42px 25px; border: 1px dashed #d8e2e5; border-radius: 12px; background: white; text-align: center; }
 .empty-state h1, .empty-state h3 { margin-top: 0; font-family: "Manrope", sans-serif; }
@@ -159,4 +166,8 @@ td.table-title { max-width: 300px; overflow: hidden; color: var(--ink); font-wei
   .form-row { grid-template-columns: 1fr; }
   .login-card { padding: 28px 23px; }
   .search-form { flex-wrap: wrap; }
+  .article { margin-top: 12px; }
+  .article-body { font-size: 17px; }
+  .pagination { flex-wrap: wrap; }
+  .pagination-pages { order: 3; width: 100%; }
 }

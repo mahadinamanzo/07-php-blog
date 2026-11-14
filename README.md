@@ -6,7 +6,7 @@ A lightweight PHP 8 and MySQL blog CMS for `http://localhost/swdmm/07-php-blog/`
 
 - PHP 8.0+ with PDO MySQL, Fileinfo, iconv, and mbstring extensions enabled
 - MySQL 5.7+ or MariaDB with InnoDB and FULLTEXT support
-- Apache with `mod_rewrite` not required; `.htaccess` support enabled with `AllowOverride All`
+- Apache with `mod_rewrite` enabled and `.htaccess` support enabled with `AllowOverride All`
 
 ## Setup
 
@@ -25,7 +25,8 @@ The app's base URL is defined in `app/bootstrap.php`. Update `BASE_URL` there if
 
 ## Features
 
-- Public post feed, category pages, individual post pages, and MySQL FULLTEXT search
+- Public post feed with six-post pagination, category pages, individual post pages, and MySQL FULLTEXT search with short-query fallback
+- Clean public URLs: `/post/{slug}` and `/category/{slug}`; post body text is escaped and rendered as paragraphs
 - Admin dashboard with post and category management
 - Draft/published states; only published posts are public
 - Prepared database statements, escaped output, CSRF-protected forms, hardened session cookies, session ID rotation, and idle/absolute admin session expiry

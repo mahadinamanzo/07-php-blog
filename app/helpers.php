@@ -74,6 +74,24 @@ function excerpt(string $text, int $length = 180): string
         : $text;
 }
 
+function render_post_body(string $body): string
+{
+    $normalized = str_replace(["\r\n", "\r"], "\n", trim($body));
+    if ($normalized === '') {
+        return '';
+    }
+
+    $paragraphs = preg_split('/\n[ \t]*\n+/', $normalized) ?: [];
+    $html = [];
+    foreach ($paragraphs as $paragraph) {
+        $paragraph = trim($paragraph);
+        if ($paragraph !== '') {
+            $html[] = '<p>' . nl2br(e($paragraph), false) . '</p>';
+        }
+    }
+    return implode("\n", $html);
+}
+
 function upload_cover(array $file): ?string
 {
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {

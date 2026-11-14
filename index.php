@@ -2,18 +2,39 @@
 declare(strict_types=1);
 require_once __DIR__ . '/app/bootstrap.php';
 
-$pageTitle = 'SWD Blog';
-$statement = db()->query(
-    "SELECT p.id, p.title, p.slug, p.body, p.cover_image, p.published_at, c.name AS category_name, c.slug AS category_slug, a.name AS author_name
+$perPage = 6;
+$page = isset($_GET['page']) && is_string($_GET['page'])
+    ? filter_var($_GET['page'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])
+    : 1;
+$page = $page === false ? 1 : (int) $page;
+
+$totalPosts = (int) db()->query("SELECT COUNT(*) FROM posts WHERE status = 'published'")->fetchColumn();
+$totalPages = max(1, (int) ceil($totalPosts / $perPage));
+$page = min($page, $totalPages);
+$offset = ($page - 1) * $perPage;
+
+$query = db()->prepare(
+    "SELECT p.id, p.title, p.slug, p.excerpt, p.cover_image, COALESCE(p.published_at, p.created_at) AS published_at,
+            c.name AS category_name, c.slug AS category_slug, a.name AS author_name
      FROM posts p
      JOIN categories c ON c.id = p.category_id
      JOIN admins a ON a.id = p.author_id
      WHERE p.status = 'published'
-     ORDER BY p.published_at DESC, p.id DESC
-     LIMIT 20"
+     ORDER BY COALESCE(p.published_at, p.created_at) DESC, p.id DESC
+     LIMIT :limit OFFSET :offset"
 );
-$posts = $statement->fetchAll();
-$categories = db()->query('SELECT name, slug FROM categories ORDER BY name')->fetchAll();
+$query->bindValue('limit', $perPage, PDO::PARAM_INT);
+$query->bindValue('offset', $offset, PDO::PARAM_INT);
+$query->execute();
+$posts = $query->fetchAll();
+$categories = db()->query(
+    "SELECT DISTINCT c.name, c.slug
+     FROM categories c
+     JOIN posts p ON p.category_id = c.id AND p.status = 'published'
+     ORDER BY c.name"
+)->fetchAll();
+
+$pageTitle = 'SWD Blog';
 require __DIR__ . '/includes/public_header.php';
 ?>
 <section class="hero">
@@ -29,7 +50,7 @@ require __DIR__ . '/includes/public_header.php';
 <?php if ($categories): ?>
   <nav class="category-pills" aria-label="Categories">
     <?php foreach ($categories as $category): ?>
-      <a class="pill" href="<?= e(url('category.php?slug=' . rawurlencode($category['slug']))) ?>"><?= e($category['name']) ?></a>
+      <a class="pill" href="<?= e(url('category/' . rawurlencode($category['slug']))) ?>"><?= e($category['name']) ?></a>
     <?php endforeach; ?>
   </nav>
 <?php endif; ?>
@@ -39,22 +60,23 @@ require __DIR__ . '/includes/public_header.php';
 <?php else: ?>
   <div class="post-grid">
     <?php foreach ($posts as $post): ?>
-      <article class="post-card">
-        <?php if ($post['cover_image']): ?>
-          <a class="cover-link" href="<?= e(url('post.php?slug=' . rawurlencode($post['slug']))) ?>">
-            <img class="post-cover" src="<?= e(url('uploads/' . rawurlencode($post['cover_image']))) ?>" alt="">
-          </a>
-        <?php else: ?>
-          <div class="cover-placeholder" aria-hidden="true"></div>
-        <?php endif; ?>
-        <div class="post-card-content">
-          <a class="category-label" href="<?= e(url('category.php?slug=' . rawurlencode($post['category_slug']))) ?>"><?= e($post['category_name']) ?></a>
-          <h3><a href="<?= e(url('post.php?slug=' . rawurlencode($post['slug']))) ?>"><?= e($post['title']) ?></a></h3>
-          <p><?= e(excerpt($post['body'])) ?></p>
-          <div class="post-meta"><?= e($post['author_name']) ?> <span>·</span> <?= e(date('M j, Y', strtotime($post['published_at']))) ?></div>
-        </div>
-      </article>
+      <?php require __DIR__ . '/includes/post_card.php'; ?>
     <?php endforeach; ?>
   </div>
+  <?php if ($totalPages > 1): ?>
+    <nav class="pagination" aria-label="Post pages">
+      <?php if ($page > 1): ?><a class="pagination-link" href="<?= e(url('?page=' . ($page - 1))) ?>" rel="prev">← Newer</a><?php endif; ?>
+      <div class="pagination-pages">
+        <?php for ($pageNumber = 1; $pageNumber <= $totalPages; $pageNumber++): ?>
+          <?php if ($pageNumber === $page): ?>
+            <span class="pagination-current" aria-current="page"><?= $pageNumber ?></span>
+          <?php else: ?>
+            <a class="pagination-page" href="<?= e(url('?page=' . $pageNumber)) ?>"><?= $pageNumber ?></a>
+          <?php endif; ?>
+        <?php endfor; ?>
+      </div>
+      <?php if ($page < $totalPages): ?><a class="pagination-link" href="<?= e(url('?page=' . ($page + 1))) ?>" rel="next">Older →</a><?php endif; ?>
+    </nav>
+  <?php endif; ?>
 <?php endif; ?>
 <?php require __DIR__ . '/includes/public_footer.php'; ?>
