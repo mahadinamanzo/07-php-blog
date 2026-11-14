@@ -34,10 +34,16 @@ function require_admin(): void
     }
 }
 
-function authenticate_admin(string $email, string $password): bool
+function authenticate_admin(string $identifier, string $password): bool
 {
-    $statement = db()->prepare('SELECT id, name, email, password_hash FROM admins WHERE email = :email LIMIT 1');
-    $statement->execute(['email' => mb_strtolower(trim($email), 'UTF-8')]);
+    $identifier = mb_strtolower(trim($identifier), 'UTF-8');
+    $statement = db()->prepare(
+        'SELECT id, name, username, email, password_hash
+         FROM admins
+         WHERE username = :username OR email = :email
+         LIMIT 1'
+    );
+    $statement->execute(['username' => $identifier, 'email' => $identifier]);
     $admin = $statement->fetch();
     if (!$admin || !password_verify($password, $admin['password_hash'])) {
         return false;

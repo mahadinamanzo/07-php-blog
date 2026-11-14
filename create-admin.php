@@ -7,14 +7,20 @@ if (PHP_SAPI !== 'cli') {
 }
 require_once __DIR__ . '/app/bootstrap.php';
 
-if ($argc !== 3) {
-    fwrite(STDERR, "Usage: php create-admin.php \"Full Name\" email@example.com\n");
+if ($argc !== 4) {
+    fwrite(STDERR, "Usage: php create-admin.php \"Full Name\" username email@example.com\n");
     exit(1);
 }
 $name = trim($argv[1]);
-$email = mb_strtolower(trim($argv[2]), 'UTF-8');
-if ($name === '' || mb_strlen($name, 'UTF-8') > 120 || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-    fwrite(STDERR, "Provide a valid name (up to 120 characters) and email address.\n");
+$username = mb_strtolower(trim($argv[2]), 'UTF-8');
+$email = mb_strtolower(trim($argv[3]), 'UTF-8');
+if (
+    $name === ''
+    || mb_strlen($name, 'UTF-8') > 120
+    || preg_match('/\A[a-z0-9._-]{3,32}\z/', $username) !== 1
+    || filter_var($email, FILTER_VALIDATE_EMAIL) === false
+) {
+    fwrite(STDERR, "Provide a valid name (up to 120 characters), username (3-32 letters, numbers, dots, underscores or hyphens), and email address.\n");
     exit(1);
 }
 if ((int) db()->query('SELECT COUNT(*) FROM admins')->fetchColumn() > 0) {
@@ -36,6 +42,11 @@ if (strlen($password) < 12 || !hash_equals($password, $confirmation)) {
     exit(1);
 }
 
-$statement = db()->prepare('INSERT INTO admins (name, email, password_hash) VALUES (:name, :email, :password_hash)');
-$statement->execute(['name' => $name, 'email' => $email, 'password_hash' => password_hash($password, PASSWORD_DEFAULT)]);
-fwrite(STDOUT, "Admin created for {$email}.\n");
+$statement = db()->prepare('INSERT INTO admins (name, username, email, password_hash) VALUES (:name, :username, :email, :password_hash)');
+$statement->execute([
+    'name' => $name,
+    'username' => $username,
+    'email' => $email,
+    'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+]);
+fwrite(STDOUT, "Admin created: {$username} ({$email}).\n");

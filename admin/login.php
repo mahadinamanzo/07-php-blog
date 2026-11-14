@@ -8,9 +8,9 @@ if (current_admin() !== null) {
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
-    $email = posted('email');
+    $identifier = posted('identifier');
     $password = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
-    if (authenticate_admin($email, $password)) {
+    if (authenticate_admin($identifier, $password)) {
         redirect('admin/');
     }
     $error = 'The email or password you entered is incorrect.';
@@ -28,7 +28,7 @@ $flashMessage = take_flash();
     <?php if ($error !== ''): ?><div class="alert error"><?= e($error) ?></div><?php endif; ?>
     <form class="stack-form" method="post" action="<?= e(url('admin/login.php')) ?>">
       <?= csrf_field() ?>
-      <label>Email address<input type="email" name="email" autocomplete="username" required value="<?= e(posted('email')) ?>"></label>
+      <label>Username or email<input type="text" name="identifier" autocomplete="username" required value="<?= e(posted('identifier')) ?>"></label>
       <label>Password<input type="password" name="password" autocomplete="current-password" required></label>
       <button class="button full-width" type="submit">Sign in</button>
     </form>
